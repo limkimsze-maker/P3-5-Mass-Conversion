@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Shot Put Mass Conversion Challenge</title>
+<style>
+:root{
+  --blue:#167ec2;
+  --deep:#075b93;
+  --sky:#eef8ff;
+  --ink:#26374a;
+  --good:#199a52;
+  --bad:#cf4c4c;
+  --p1:#438fe8;
+  --p2:#e95a55;
+  --gold:#d99b16;
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;height:100%;overflow:hidden;
+  font-family:"Trebuchet MS","Arial Rounded MT Bold",Arial,sans-serif;
+  background:linear-gradient(#edf8ff,#fff);
+  color:var(--ink)
+}
+body{padding:8px}
+button,input{font:inherit}
+button{cursor:pointer;touch-action:manipulation}
+.app{
+  max-width:1240px;height:calc(100vh - 16px);margin:auto;
+  background:#fff;border:2px solid #cfe9fb;border-radius:24px;
+  overflow:hidden;box-shadow:0 12px 34px #4c8fb521;
+  display:flex;flex-direction:column
+}
+header{
+  flex:0 0 auto;background:var(--blue);color:#fff;padding:10px 16px;
+  display:flex;justify-content:space-between;align-items:center;gap:10px
+}
+header h1{margin:0;font-size:clamp(22px,2.8vw,36px)}
+header .sub{font-size:12px;line-height:1.25;text-align:right}
+main{flex:1;min-height:0;padding:10px;display:flex;flex-direction:column}
+.screen{display:none;height:100%;min-height:0}
+.screen.active{display:flex}
+.card{border:2px solid #d7edf9;border-radius:20px;background:#fff;box-shadow:0 7px 18px #4d8fb514}
+.hidden{display:none!important}
+
+/* HOME */
+#home{align-items:stretch}
+.homeGrid{flex:1;min-height:0;display:grid;grid-template-columns:1.05fr .95fr;gap:10px}
+.intro,.preview{padding:18px;overflow:hidden}
+.intro h2{margin:0;color:var(--deep);font-size:clamp(28px,4.4vw,52px);line-height:1.02}
+.intro p{font-size:clamp(15px,1.7vw,21px);line-height:1.42;margin:10px 0}
+.modeRow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.modeBtn{
+  border:0;border-radius:18px;color:#fff;padding:18px 10px;
+  font-size:clamp(20px,2.2vw,28px);font-weight:900;box-shadow:0 6px 0 #0002
+}
+.modeBtn.one{background:var(--p1)}
+.modeBtn.two{background:linear-gradient(90deg,var(--p1) 50%,var(--p2) 50%)}
+.modeBtn:active{transform:translateY(3px);box-shadow:0 3px 0 #0002}
+.diffWrap{margin-top:16px}
+.diffTitle{font-weight:900;color:var(--deep);font-size:clamp(16px,1.8vw,22px);margin-bottom:8px}
+.diffRow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.diffBtn{
+  border:2px solid #b9daf2;background:#fff;color:#1467a6;
+  border-radius:16px;padding:10px 8px;font-weight:900;font-size:clamp(15px,1.6vw,19px)
+}
+.diffBtn.active{background:#eaf6ff;border-color:#2889ce;box-shadow:0 0 0 3px #d8efff inset}
+.diffHint{font-size:12px;color:#6b7f90;line-height:1.35;margin-top:8px}
+.preview{background:linear-gradient(150deg,#fff,#eef9ff)}
+.preview h3{margin:0 0 8px;color:var(--deep);font-size:clamp(22px,2.4vw,30px)}
+.preview ul{font-size:clamp(14px,1.5vw,18px);line-height:1.5;margin:0 0 8px 20px;padding:0}
+.previewArt{
+  height:210px;border:2px solid #d7ecfa;border-radius:18px;background:#fff;
+  display:flex;align-items:center;justify-content:center;overflow:hidden
+}
+.note{font-size:12px;color:#6b7f90;text-align:center;margin-top:8px;line-height:1.3}
+
+/* GAME */
+#game{flex-direction:column;gap:7px}
+.controls{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.btnRow{display:flex;gap:8px}
+.smallbtn{
+  border:0;background:#eaf6ff;color:#075f9f;border-radius:11px;padding:8px 12px;
+  font-weight:900;font-size:14px
+}
+.statusline{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.score{padding:8px 12px;border:2px solid #dceeff;border-radius:13px;background:#fff;font-weight:900}
+.score.p1{border-color:#b8d6ff}.score.p2{border-color:#ffb8b5;text-align:right}
+.round{font-weight:900;color:#5f7485;text-align:center}
+.progress{height:8px;background:#e9f3f9;border-radius:999px;overflow:hidden}
+.progress div{height:100%;background:var(--blue);width:0;transition:.25s}
+
+.gameGrid{
+  flex:1;min-height:0;
+  display:grid;grid-template-columns:minmax(0,1.15fr) minmax(330px,.85fr);gap:8px
+}
+.questionCard{
+  min-height:0;padding:12px;display:flex;flex-direction:column;overflow:hidden
+}
+.badges{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{padding:6px 12px;border-radius:999px;font-weight:900;background:#eaf7ff;color:#0767aa}
+.turn.p1{background:#edf5ff;color:#3372bc;border:2px solid #bfd8ff}
+.turn.p2{background:#fff0ef;color:#b9413d;border:2px solid #ffc3c0}
+#question{
+  text-align:center;font-weight:900;font-size:clamp(20px,2.5vw,30px);line-height:1.15;
+  margin:8px 0
+}
+.workArea{
+  flex:1;min-height:0;border:2px solid #d9edfa;border-radius:18px;background:#fbfeff;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;padding:12px;overflow:hidden
+}
+.massMain{
+  font-size:clamp(30px,4vw,46px);font-weight:900;color:#153b5c;margin-bottom:12px
+}
+.mainExpr{
+  grid-column:2;
+  text-align:left;
+  white-space:nowrap;
+  font-size:clamp(30px,4vw,46px);
+  font-weight:900;
+  color:#153b5c;
+  margin-bottom:4px;
+}
+.step{
+  font-size:clamp(20px,2.5vw,30px);font-weight:900;line-height:1.5;text-align:center;margin:4px 0
+}
+.equationGrid{
+  display:grid;
+  grid-template-columns:34px auto;
+  align-items:center;
+  justify-content:center;
+  column-gap:10px;
+  row-gap:8px;
+  width:max-content;
+  max-width:100%;
+  margin:0 auto;
+  font-size:clamp(20px,2.5vw,30px);
+  font-weight:900;
+  line-height:1.35;
+}
+.stepRow{
+  display:contents;
+}
+.eqCol{
+  grid-column:1;
+  text-align:right;
+  color:#153b5c;
+}
+.exprCol{
+  grid-column:2;
+  text-align:left;
+  white-space:nowrap;
+}
+.blank{
+  width:105px;height:48px;border:3px solid #b6d8f0;border-radius:14px;background:#fff;
+  text-align:center;font-weight:900;font-size:clamp(19px,2.2vw,27px);color:var(--ink);
+  vertical-align:middle
+}
+.blank.wide{width:125px}
+.blank.correct{border-color:var(--good);background:#edf9f2;color:#08743a}
+.blank.wrong{border-color:var(--bad);background:#fff1f1;color:#b33030}
+.actions{display:flex;justify-content:center;gap:10px;margin-top:8px}
+.action{
+  border:0;border-radius:13px;padding:9px 18px;background:var(--blue);color:#fff;
+  font-weight:900;font-size:18px
+}
+.action.alt{background:#6d80a6}
+.feedback{text-align:center;min-height:26px;font-weight:900;font-size:18px;margin-top:6px}
+.explain{text-align:center;min-height:30px;color:#637486;font-size:14px;line-height:1.35}
+
+/* STRONGMAN */
+.strongmanCard{
+  min-height:0;padding:10px;display:flex;flex-direction:column;overflow:hidden;
+  background:linear-gradient(#fbfdff,#f4faff)
+}
+.athleteName{
+  align-self:center;font-weight:900;font-size:clamp(18px,2vw,24px);
+  padding:6px 12px;border-radius:999px
+}
+.athleteName.p1{background:#edf5ff;color:#3372bc}
+.athleteName.p2{background:#fff0ef;color:#b9413d}
+.strongmanStage{
+  flex:1;min-height:0;display:flex;align-items:flex-end;justify-content:center;
+  position:relative;border-radius:18px;overflow:hidden;
+  background:linear-gradient(#edf8ff 0 72%,#d7efcb 72% 100%);
+  margin-top:8px
+}
+.strongmanSvg{width:96%;height:96%}
+.resultText{text-align:center;font-weight:900;font-size:18px;min-height:26px;margin-top:6px;color:#5a6c7a}
+
+/* RESULTS */
+#results{align-items:center;justify-content:center}
+.results{width:min(680px,100%);padding:28px;text-align:center}
+.trophy{font-size:72px}
+.results h2{margin:0 0 10px;color:var(--deep);font-size:clamp(30px,4vw,50px)}
+.results p{font-size:clamp(18px,2vw,23px);line-height:1.45}
+.bigbtn{border:0;border-radius:14px;padding:12px 20px;margin:5px;background:var(--blue);color:#fff;font-size:19px;font-weight:900}
+.gold{background:#d99b16}
+
+@media(max-width:900px){
+  .homeGrid{grid-template-columns:1fr}.preview{display:none}
+  .gameGrid{grid-template-columns:1fr;grid-template-rows:minmax(0,1.15fr) minmax(180px,.85fr)}
+}
+@media(max-width:700px){
+  body{padding:0}.app{height:100vh;border-radius:0}
+  header{padding:8px 12px}
+  main{padding:8px}
+  .gameGrid{grid-template-rows:minmax(0,1.3fr) minmax(160px,.7fr)}
+  .blank{width:86px;height:42px}
+}
+@media(max-height:760px){
+  .questionCard,.strongmanCard{padding:8px}
+  #question{font-size:20px;margin:5px 0}
+  .massMain{font-size:30px;margin-bottom:6px}
+  .step{font-size:20px;margin:2px 0}
+  .blank{height:40px}
+  .actions{margin-top:5px}
+  .feedback{font-size:16px;margin-top:4px}
+  .explain{font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <h1>🪨 Shot Put Mass Conversion Challenge</h1>
+  <div class="sub">Convert kg and g ↔ g<br>1 Player or 2 Players</div>
+</header>
+
+<main>
+<section id="home" class="screen active">
+  <div class="homeGrid">
+    <div class="card intro">
+      <h2>Convert the Mass. Throw the Shot!</h2>
+      <p>Practise converting between <b>kilograms and grams</b> using fill-in-the-blank working, like the examples in your worksheet.</p>
+
+      <div class="modeRow">
+        <button class="modeBtn one" onclick="startGame(1)">👤 1 Player</button>
+        <button class="modeBtn two" onclick="startGame(2)">👥 2 Players</button>
+      </div>
+
+      <div class="diffWrap">
+        <div class="diffTitle">Choose difficulty</div>
+        <div class="diffRow">
+          <button id="diffEasy" class="diffBtn" onclick="setDifficulty('easy')">Easy</button>
+          <button id="diffIntermediate" class="diffBtn active" onclick="setDifficulty('intermediate')">Intermediate</button>
+          <button id="diffHard" class="diffBtn" onclick="setDifficulty('hard')">Hard</button>
+        </div>
+        <div class="diffHint">
+          <b>Easy</b>: more helper steps shown.<br>
+          <b>Intermediate</b>: full worksheet-style working.<br>
+          <b>Hard</b>: no helper steps — convert directly.
+        </div>
+      </div>
+
+      <div class="note">
+        Correct answer: the athlete throws the shot successfully.<br>
+        Wrong answer: the throw fails.
+      </div>
+    </div>
+
+    <div class="card preview">
+      <h3>Question types</h3>
+      <ul>
+        <li><b>kg and g → g</b>, e.g. 4 kg 200 g → 4200 g</li>
+        <li><b>g → kg and g</b>, e.g. 5128 g → 5 kg 128 g</li>
+        <li>Fill in the missing values in the conversion steps</li>
+        <li>10 mixed questions per game</li>
+      </ul>
+      <div class="previewArt" id="previewArt"></div>
+    </div>
+  </div>
+</section>
+
+<section id="game" class="screen">
+  <div class="controls">
+    <div class="btnRow">
+      <button class="smallbtn" onclick="goHome()">← Home</button>
+      <button class="smallbtn" onclick="restart()">↻ New Game</button>
+      <button class="smallbtn" id="difficultyDisplay" onclick="goHome()">★ Intermediate</button>
+    </div>
+    <button class="smallbtn" id="soundBtn" onclick="toggleSound()">🔊 Sound On</button>
+  </div>
+
+  <div class="statusline">
+    <div class="score p1" id="score1">Player 1: 0</div>
+    <div class="round" id="round">1 / 10</div>
+    <div class="score p2" id="score2">Player 2: 0</div>
+  </div>
+  <div class="progress"><div id="bar"></div></div>
+
+  <div class="gameGrid">
+    <div class="card questionCard">
+      <div class="badges">
+        <div class="badge" id="typeBadge">kg and g → g</div>
+        <div class="badge turn p1" id="turnBanner">👤 Your Turn</div>
+      </div>
+
+      <div id="question">Fill in the blanks.</div>
+
+      <div class="workArea" id="workArea"></div>
+
+      <div class="actions">
+        <button id="checkBtn" class="action" onclick="checkAnswer()">Check Answer</button>
+        <button id="nextBtn" class="action alt hidden" onclick="nextQuestion()">Next →</button>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+      <div class="explain" id="explain"></div>
+    </div>
+
+    <div class="card strongmanCard">
+      <div id="athleteName" class="athleteName p1">Your Shot Putter</div>
+
+      <div class="strongmanStage">
+        <svg class="strongmanSvg" viewBox="0 0 440 370" aria-label="shot put athlete">
+          <!-- throwing circle -->
+          <ellipse cx="190" cy="305" rx="125" ry="34" fill="#d9e8ef" stroke="#8799a8" stroke-width="4"/>
+          <path d="M66 305 A124 34 0 0 0 314 305" fill="none" stroke="#8799a8" stroke-width="4"/>
+          <rect x="304" y="288" width="35" height="10" rx="4" fill="#ffffff" stroke="#8799a8" stroke-width="3"/>
+
+          <g id="athleteGroup">
+            <!-- legs -->
+            <line x1="170" y1="236" x2="142" y2="292" stroke="#26374a" stroke-width="18" stroke-linecap="round"/>
+            <line x1="207" y1="234" x2="235" y2="292" stroke="#26374a" stroke-width="18" stroke-linecap="round"/>
+            <line x1="132" y1="296" x2="158" y2="296" stroke="#111" stroke-width="11" stroke-linecap="round"/>
+            <line x1="225" y1="296" x2="252" y2="296" stroke="#111" stroke-width="11" stroke-linecap="round"/>
+
+            <!-- torso -->
+            <path id="shirt" d="M150 150 Q182 136 213 153 L220 231 Q183 247 143 230 Z"
+                  fill="#438fe8" stroke="#26374a" stroke-width="5"/>
+
+            <!-- head -->
+            <circle cx="181" cy="113" r="30" fill="#f0b782" stroke="#26374a" stroke-width="5"/>
+            <path d="M156 105 Q181 77 206 105" fill="#26374a"/>
+            <circle cx="171" cy="114" r="3" fill="#26374a"/>
+            <circle cx="192" cy="114" r="3" fill="#26374a"/>
+            <path id="mouth" d="M170 130 Q181 137 192 130" fill="none" stroke="#26374a" stroke-width="4" stroke-linecap="round"/>
+
+            <!-- left arm for balance -->
+            <path d="M151 169 Q124 177 106 195" fill="none" stroke="#f0b782" stroke-width="18" stroke-linecap="round"/>
+
+            <!-- throwing arm bent with shot at neck -->
+            <path d="M211 168 Q232 149 235 124" fill="none" stroke="#f0b782" stroke-width="18" stroke-linecap="round"/>
+            <circle id="heldShot" cx="236" cy="112" r="12" fill="#565d66" stroke="#353b42" stroke-width="3"/>
+
+            <!-- shot put after release -->
+            <circle id="flyingShot" cx="236" cy="112" r="12" fill="#565d66" stroke="#353b42" stroke-width="3" opacity="0"/>
+          </g>
+
+          <!-- sector / landing area -->
+          <path d="M334 300 Q375 235 426 182" fill="none" stroke="#d4b06f" stroke-width="4" stroke-dasharray="8 7"/>
+          <path d="M334 300 Q392 272 432 260" fill="none" stroke="#d4b06f" stroke-width="4" stroke-dasharray="8 7"/>
+        </svg>
+      </div>
+
+      <div class="resultText" id="sportResult">Ready to throw!</div>
+    </div>
+  </div>
+</section>
+
+<section id="results" class="screen">
+  <div class="card results">
+    <div class="trophy">🏆</div>
+    <h2 id="resultTitle">Great Work!</h2>
+    <p id="resultText"></p>
+    <button class="bigbtn" onclick="restart()">Play Again</button>
+    <button class="bigbtn gold" onclick="goHome()">Choose Mode</button>
+  </div>
+</section>
+</main>
+</div>
+
+<script>
+const TOTAL=10;
+let mode=1;
+let round=0;
+let currentPlayer=0;
+let scores=[0,0];
+let questions=[];
+let answered=false;
+let soundOn=true;
+let audioCtx=null;
+let difficulty="intermediate";
+
+function difficultyLabel(){
+  return difficulty==="easy" ? "Easy" : difficulty==="hard" ? "Hard" : "Intermediate";
+}
+function updateDifficultyUI(){
+  const ids=["easy","intermediate","hard"];
+  ids.forEach(level=>{
+    const btn=document.getElementById("diff"+level.charAt(0).toUpperCase()+level.slice(1));
+    if(btn) btn.classList.toggle("active", difficulty===level);
+  });
+  const display=document.getElementById("difficultyDisplay");
+  if(display) display.textContent="★ "+difficultyLabel();
+}
+function setDifficulty(level){
+  difficulty=level;
+  updateDifficultyUI();
+}
+
+// ---------- SOUND ----------
+function initAudio(){
+  if(audioCtx) return;
+  const Ctx=window.AudioContext||window.webkitAudioContext;
+  if(Ctx) audioCtx=new Ctx();
+}
+function tone(freq,dur=.1,type="triangle",vol=.04,delay=0){
+  if(!soundOn) return;
+  initAudio();
+  if(!audioCtx) return;
+  const t=audioCtx.currentTime+delay;
+  const o=audioCtx.createOscillator();
+  const g=audioCtx.createGain();
+  o.type=type;
+  o.frequency.setValueAtTime(freq,t);
+  g.gain.setValueAtTime(.0001,t);
+  g.gain.exponentialRampToValueAtTime(vol,t+.01);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g).connect(audioCtx.destination);
+  o.start(t);o.stop(t+dur+.02);
+}
+function correctSound(){tone(660,.08);tone(880,.12,"triangle",.045,.09)}
+function wrongSound(){tone(210,.12,"sawtooth",.045);tone(160,.18,"sawtooth",.035,.11)}
+function liftSound(){tone(300,.06,"square",.03);tone(420,.08,"square",.03,.07);tone(560,.1,"triangle",.035,.14)}
+function toggleSound(){
+  soundOn=!soundOn;
+  document.getElementById("soundBtn").textContent=soundOn?"🔊 Sound On":"🔇 Sound Off";
+}
+
+// ---------- HELPERS ----------
+function show(id){
+  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+function goHome(){show("home")}
+function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function makeInput(i,wide=false){
+  return `<input class="blank ${wide?'wide':''}" data-i="${i}" inputmode="numeric" autocomplete="off">`;
+}
+function inputs(){return [...document.querySelectorAll(".blank[data-i]")]}
+function startGame(m){
+  mode=m;
+  initAudio();
+  if(audioCtx&&audioCtx.state==="suspended")audioCtx.resume();
+  restart();
+}
+function restart(){
+  round=0;
+  currentPlayer=0;
+  scores=[0,0];
+  questions=buildQuestions();
+  document.getElementById("score2").style.visibility=mode===2?"visible":"hidden";
+  updateDifficultyUI();
+  show("game");
+  renderQuestion();
+}
+
+// ---------- QUESTIONS ----------
+function buildQuestions(){
+  let qs=[];
+
+  for(let i=0;i<5;i++){
+    const kg=pick([1,2,3,4,5,6,7,8,9]);
+    const g=pick([100,200,300,400,500,600,700,800,900]);
+    const kgInG=kg*1000;
+    const total=kgInG+g;
+
+    let html="", answers=[], explain="";
+    if(difficulty==="easy"){
+      html=`
+        <div class="equationGrid">
+          <div class="stepRow"><span class="eqCol"></span><span class="mainExpr">${kg} kg ${g} g</span></div>
+          <div class="stepRow"><span class="eqCol">=</span><span class="exprCol">${kg} kg + ${g} g</span></div>
+          <div class="stepRow"><span class="eqCol">=</span><span class="exprCol">${kgInG} g + ${g} g</span></div>
+        </div>
+        <div class="step">The mass is <b>${makeInput(0,true)} g</b>.</div>
+      `;
+      answers=[total];
+      explain=`${kg} kg = ${kgInG} g, so ${kgInG} g + ${g} g = ${total} g.`;
+    }else if(difficulty==="hard"){
+      html=`
+        <div class="equationGrid">
+          <div class="stepRow"><span class="eqCol"></span><span class="mainExpr">${kg} kg ${g} g</span></div>
+        </div>
+        <div class="step">The mass is <b>${makeInput(0,true)} g</b>.</div>
+      `;
+      answers=[total];
+      explain=`${kg} kg = ${kgInG} g, so the total mass is ${total} g.`;
+    }else{
+      html=`
+        <div class="equationGrid">
+          <div class="stepRow"><span class="eqCol"></span><span class="mainExpr">${kg} kg ${g} g</span></div>
+          <div class="stepRow"><span class="eqCol">=</span><span class="exprCol">${kg} kg + ${g} g</span></div>
+          <div class="stepRow"><span class="eqCol">=</span><span class="exprCol">${makeInput(0,true)} g + ${g} g</span></div>
+          <div class="stepRow"><span class="eqCol">=</span><span class="exprCol">${makeInput(1,true)} g</span></div>
+        </div>
+        <div class="step">The mass is <b>${makeInput(2,true)} g</b>.</div>
+      `;
+      answers=[kgInG,total,total];
+      explain=`${kg} kg = ${kgInG} g, so ${kgInG} g + ${g} g = ${total} g.`;
+    }
+
+    qs.push({
+      type:"kg_g_to_g",
+      badge:`kg and g → g • ${difficultyLabel()}`,
+      answers,
+      html,
+      explain
+    });
+  }
+
+  for(let i=0;i<5;i++){
+    const kg=pick([1,2,3,4,5,6,7,8,9]);
+    const g=pick([8,24,56,90,128,235,407,512,628,904]);
+    const total=kg*1000+g;
+    const thousands=kg*1000;
+
+    let html="", answers=[], explain="";
+    if(difficulty==="easy"){
+      html=`
+        <div class="equationGrid">
+          <div class="stepRow"><span class="eqCol"></span><span class="mainExpr">${total} g</span></div>
+          <div class="stepRow"><span class="eqCol">=</span><span class="exprCol">${thousands} g + ${g} g</span></div>
+        </div>
+        <div class="step">The mass is <b>${makeInput(0)} kg ${makeInput(1,true)} g</b>.</div>
+      `;
+      answers=[kg,g];
+      explain=`${total} g = ${thousands} g + ${g} g = ${kg} kg ${g} g.`;
+    }else if(difficulty==="hard"){
+      html=`
+        <div class="equationGrid">
+          <div class="stepRow"><span class="eqCol"></span><span class="mainExpr">${total} g</span></div>
+        </div>
+        <div class="step">The mass is <b>${makeInput(0)} kg ${makeInput(1,true)} g</b>.</div>
+      `;
+      answers=[kg,g];
+      explain=`${total} g = ${kg} kg ${g} g.`;
+    }else{
+      html=`
+        <div class="equationGrid">
+          <div class="stepRow"><span class="eqCol"></span><span class="mainExpr">${total} g</span></div>
+          <div class="stepRow"><span class="eqCol">=</span><span class="exprCol">${makeInput(0,true)} g + ${makeInput(1,true)} g</span></div>
+          <div class="stepRow"><span class="eqCol">=</span><span class="exprCol">${makeInput(2)} kg + ${makeInput(3,true)} g</span></div>
+          <div class="stepRow"><span class="eqCol">=</span><span class="exprCol">${makeInput(4)} kg ${makeInput(5,true)} g</span></div>
+        </div>
+      `;
+      answers=[thousands,g,kg,g,kg,g];
+      explain=`${total} g = ${thousands} g + ${g} g = ${kg} kg ${g} g.`;
+    }
+
+    qs.push({
+      type:"g_to_kg_g",
+      badge:`g → kg and g • ${difficultyLabel()}`,
+      answers,
+      html,
+      explain
+    });
+  }
+
+  return shuffle(qs);
+}
+
+// ---------- SPORT ANIMATION ----------
+// ---------- SPORT ANIMATION ----------
+// ---------- SPORT ANIMATION ----------
+function setAthleteColour(){
+  const shirt=document.getElementById("shirt");
+  shirt.setAttribute("fill",(mode===2&&currentPlayer===1)?"#e95a55":"#438fe8");
+}
+function resetAthlete(){
+  const athlete=document.getElementById("athleteGroup");
+  const shot=document.getElementById("flyingShot");
+  const held=document.getElementById("heldShot");
+  athlete.getAnimations().forEach(a=>a.cancel());
+  shot.getAnimations().forEach(a=>a.cancel());
+  held.getAnimations().forEach(a=>a.cancel());
+  athlete.style.transform="";
+  shot.style.transform="";
+  held.style.transform="";
+  shot.style.opacity="0";
+  held.style.opacity="1";
+  document.getElementById("mouth").setAttribute("d","M170 130 Q181 137 192 130");
+  document.getElementById("sportResult").textContent="Ready to throw!";
+  setAthleteColour();
+}
+function successLift(){
+  liftSound();
+  const athlete=document.getElementById("athleteGroup");
+  const shot=document.getElementById("flyingShot");
+  const held=document.getElementById("heldShot");
+
+  shot.style.opacity="1";
+
+  athlete.animate([
+    {transform:"rotate(0deg) translate(0,0)"},
+    {transform:"rotate(-6deg) translate(6px,-4px)"}
+  ],{duration:500,easing:"ease-out",fill:"forwards"});
+
+  held.animate([
+    {opacity:1},
+    {opacity:0}
+  ],{duration:120,fill:"forwards"});
+
+  shot.animate([
+    {transform:"translate(0,0)",opacity:1},
+    {transform:"translate(70px,-95px)",opacity:1,offset:.45},
+    {transform:"translate(155px,-125px)",opacity:1,offset:.72},
+    {transform:"translate(195px,-80px)",opacity:1}
+  ],{
+    duration:950,
+    easing:"cubic-bezier(.2,.7,.2,1)",
+    fill:"forwards"
+  });
+
+  document.getElementById("mouth").setAttribute("d","M170 129 Q181 140 192 129");
+  document.getElementById("sportResult").textContent="🏆 Great throw!";
+}
+function failLift(){
+  wrongSound();
+  const athlete=document.getElementById("athleteGroup");
+  const shot=document.getElementById("flyingShot");
+  const held=document.getElementById("heldShot");
+
+  athlete.animate([
+    {transform:"translateX(0)"},
+    {transform:"translateX(-5px)"},
+    {transform:"translateX(5px)"},
+    {transform:"translateX(0)"}
+  ],{duration:450,easing:"ease-in-out"});
+
+  shot.style.opacity="1";
+
+  held.animate([
+    {opacity:1},
+    {opacity:0}
+  ],{duration:120,fill:"forwards"});
+
+  shot.animate([
+    {transform:"translate(0,0)",opacity:1},
+    {transform:"translate(28px,-20px)",opacity:1},
+    {transform:"translate(42px,35px)",opacity:1}
+  ],{duration:500,easing:"ease-in",fill:"forwards"});
+
+  document.getElementById("mouth").setAttribute("d","M170 136 Q181 127 192 136");
+  document.getElementById("sportResult").textContent="💢 Throw failed!";
+}
+
+// ---------- GAME ----------
+// ---------- GAME ----------
+// ---------- GAME ----------
+function renderQuestion(){
+  answered=false;
+  resetAthlete();
+
+  const q=questions[round];
+  document.getElementById("round").textContent=`${round+1} / ${TOTAL}`;
+  document.getElementById("bar").style.width=`${(round/TOTAL)*100}%`;
+  document.getElementById("score1").textContent=`Player 1: ${scores[0]}`;
+  document.getElementById("score2").textContent=`Player 2: ${scores[1]}`;
+  document.getElementById("typeBadge").textContent=q.badge;
+  document.getElementById("workArea").innerHTML=q.html;
+  document.getElementById("feedback").textContent="";
+  document.getElementById("explain").textContent="";
+
+  const check=document.getElementById("checkBtn");
+  check.disabled=false;
+  document.getElementById("nextBtn").classList.add("hidden");
+
+  const turn=document.getElementById("turnBanner");
+  const athleteName=document.getElementById("athleteName");
+
+  if(mode===2){
+    turn.textContent=currentPlayer===0?"🔵 Player 1's Turn":"🔴 Player 2's Turn";
+    turn.className="badge turn "+(currentPlayer===0?"p1":"p2");
+    athleteName.textContent=currentPlayer===0?"Player 1's Shot Putter":"Player 2's Shot Putter";
+    athleteName.className="athleteName "+(currentPlayer===0?"p1":"p2");
+  }else{
+    turn.textContent="👤 Your Turn";
+    turn.className="badge turn p1";
+    athleteName.textContent="Your Shot Putter";
+    athleteName.className="athleteName p1";
+  }
+
+  setAthleteColour();
+
+  const ins=inputs();
+  ins.forEach(inp=>{
+    inp.disabled=false;
+    inp.className=inp.className.replace(" correct","").replace(" wrong","");
+    inp.addEventListener("keydown",e=>{
+      if(e.key==="Enter"){
+        e.preventDefault();
+        checkAnswer();
+      }
+    });
+  });
+  if(ins.length)ins[0].focus();
+}
+
+function getVal(inp){
+  const t=inp.value.trim();
+  if(t==="")return null;
+  if(!/^\d+$/.test(t))return NaN;
+  return Number(t);
+}
+
+function checkAnswer(){
+  if(answered)return;
+
+  const q=questions[round];
+  const ins=inputs();
+  const vals=ins.map(getVal);
+
+  if(vals.some(v=>v===null)){
+    const f=document.getElementById("feedback");
+    f.textContent="⚠️ Fill in all blanks first.";
+    f.style.color="#b36f14";
+    return;
+  }
+
+  answered=true;
+  document.getElementById("checkBtn").disabled=true;
+
+  let allCorrect=true;
+  ins.forEach((inp,i)=>{
+    const ok=Number(vals[i])===Number(q.answers[i]);
+    inp.classList.add(ok?"correct":"wrong");
+    inp.disabled=true;
+    if(!ok)allCorrect=false;
+  });
+
+  const fb=document.getElementById("feedback");
+  const ex=document.getElementById("explain");
+
+  if(allCorrect){
+    correctSound();
+    scores[mode===2?currentPlayer:0]++;
+    fb.textContent="✅ Correct!";
+    fb.style.color="#14884b";
+    ex.textContent=q.explain;
+    successLift();
+  }else{
+    fb.textContent="❌ Not quite.";
+    fb.style.color="#b43b3b";
+    ex.textContent=q.explain;
+    failLift();
+  }
+
+  document.getElementById("score1").textContent=`Player 1: ${scores[0]}`;
+  document.getElementById("score2").textContent=`Player 2: ${scores[1]}`;
+  document.getElementById("nextBtn").classList.remove("hidden");
+}
+
+function nextQuestion(){
+  round++;
+  if(round>=TOTAL){finish();return}
+  if(mode===2)currentPlayer=currentPlayer===0?1:0;
+  renderQuestion();
+}
+
+function finish(){
+  document.getElementById("bar").style.width="100%";
+  show("results");
+
+  if(mode===1){
+    const s=scores[0];
+    document.getElementById("resultTitle").textContent=s>=8?"Shot Put Conversion Champion!":s>=5?"Great Work!":"Keep Training!";
+    document.getElementById("resultText").innerHTML=
+      `You converted <b>${s} out of ${TOTAL}</b> masses correctly.<br>`+
+      (s>=8?"Excellent kg and g conversion!":s>=5?"You are getting confident with mass conversion.":"Try again and remember: 1 kg = 1000 g.");
+  }else{
+    const a=scores[0],b=scores[1];
+    document.getElementById("resultTitle").textContent=a===b?"It's a Draw!":`Player ${a>b?1:2} Wins!`;
+    document.getElementById("resultText").innerHTML=
+      `Player 1: <b>${a}</b><br>Player 2: <b>${b}</b><br><br>Players took turns converting masses and making shot put throws.`;
+  }
+}
+
+// preview
+updateDifficultyUI();
+document.getElementById("previewArt").innerHTML=`
+<svg viewBox="0 0 560 220" style="width:100%;height:100%">
+  <rect x="0" y="165" width="560" height="55" fill="#d7efcb"/>
+  <path d="M340 166 Q405 145 520 142" fill="none" stroke="#d2b48c" stroke-width="6" stroke-dasharray="8 7"/>
+  <circle cx="445" cy="72" r="14" fill="#565d66"/>
+  <circle cx="185" cy="65" r="26" fill="#f0b782" stroke="#26374a" stroke-width="4"/>
+  <path d="M158 101 Q185 88 212 101 L219 162 Q185 176 151 162 Z" fill="#438fe8" stroke="#26374a" stroke-width="4"/>
+  <line x1="164" y1="113" x2="145" y2="144" stroke="#f0b782" stroke-width="15" stroke-linecap="round"/>
+  <line x1="206" y1="112" x2="222" y2="85" stroke="#f0b782" stroke-width="15" stroke-linecap="round"/>
+  <circle cx="226" cy="78" r="10" fill="#565d66"/>
+  <line x1="170" y1="163" x2="150" y2="202" stroke="#26374a" stroke-width="15" stroke-linecap="round"/>
+  <line x1="199" y1="163" x2="220" y2="202" stroke="#26374a" stroke-width="15" stroke-linecap="round"/>
+  <text x="370" y="202" text-anchor="middle" font-size="24" font-weight="900" fill="#075b93">Correct → make the throw!</text>
+</svg>`;</script>
+</body>
+</html>
