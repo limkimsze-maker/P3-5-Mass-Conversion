@@ -442,7 +442,7 @@ function pick(a){return a[Math.floor(Math.random()*a.length)]}
 function makeInput(i,wide=false){
   return `<input class="blank ${wide?'wide':''}" data-i="${i}" inputmode="numeric" autocomplete="off">`;
 }
-function inputs(){return [...document.querySelectorAll(".blank[data-i]")]}
+function inputs(){return [...document.querySelectorAll(".blank[data-i]")].sort((a,b)=>Number(a.dataset.i)-Number(b.dataset.i))}
 function startGame(m){
   mode=m;
   initAudio();
@@ -798,7 +798,7 @@ document.getElementById("previewArt").innerHTML=`
   <text x="370" y="202" text-anchor="middle" font-size="24" font-weight="900" fill="#075b93">Correct → make the throw!</text>
 </svg>`;</script>
 <script src="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-original-questions-v1.js?v=20260810a" data-practice="5"></script>
-<script src="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-2p-12-round-v1.js?v=20260811a"></script>
+<script src="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-2p-12-round-v2.js?v=20260812b"></script>
 <script src="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-medal-hook-v4.js?v=20260811a" data-practice="5" data-sport="Shot Put"></script>
 <script src="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-random-questions-v1.js?v=20260812a" data-practice="5"></script>
 </body>
